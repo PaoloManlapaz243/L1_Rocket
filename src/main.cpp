@@ -1,7 +1,9 @@
 #include <Wire.h>
 #include <SPI.h>
-#include <Adafruit_BME280.h>
+#include <Adafruit_BMP280.h>
 #include <SD.h>
+#include <WiFi.h>
+#include <passwords.h>
 
 #define SPISCK 18 //IO18
 #define SPIMOSI 23 //IO23
@@ -23,7 +25,7 @@ const char FILESUF[] = ".csv";
 
 File dataFile;
 
-Adafruit_BME280 bmp(CSBMP280, &SPI);
+Adafruit_BMP280 bmp(CSBMP280, &SPI);
 
 void setup() 
 {
@@ -92,6 +94,22 @@ void setup()
   digitalWrite(CSBMP280, HIGH);
 
   digitalWrite(ONBOARDLED, LOW);
+
+  int status = WiFi.begin(passwords::WIFINAME, passwords::WIFIPWD);
+
+  Serial.println();
+
+  while(status != WL_CONNECTED)
+  {
+    Serial.println("Failed");
+    WiFi.disconnect();
+    delay(10000);
+    status = WiFi.begin(passwords::WIFINAME, passwords::WIFIPWD);
+
+  }
+  IPAddress ip = WiFi.gatewayIP();
+  Serial.println(ip);
+
 }
 
 void loop() 
@@ -101,7 +119,6 @@ void loop()
     float p = bmp.readPressure();
     float h = bmp.readAltitude(1013.25);
     digitalWrite(CSBMP280, HIGH);
-
 
     t = t * 1.8 + 32;
 
