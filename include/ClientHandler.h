@@ -1,17 +1,39 @@
-#ifndef CLIENT_HANDLER_H
-#define CLIENT_HANDLER_H
+// #ifndef CLIENT_HANDLER_H
+// #define CLIENT_HANDLER_H
 
+// #include <WiFi.h>
+
+// class ClientHandler
+// {
+//     private:
+    
+//         WiFiClient client;
+
+//     public:
+    
+//         ClientHandler(WiFiClient);
+//         ~ClientHandler();
+//         String readRequest();
+//         void sendData(String);
+//         void startSendData();
+//         void endSendData();
+// };
+
+// #endif
+
+#pragma once
 #include <WiFi.h>
 
-class ClientHandler
-{
-    private:
-    
-        WiFiClient client;
+class ClientHandler {
+public:
+    ClientHandler(WiFiClient client);
+    ~ClientHandler();
 
-    public:
-    
-        ClientHandler(WiFiClient);
+    String readRequest();      // Reads request line only
+    void sendHTML();
+    void sendData(String data);
+    void send404();
+
+private:
+    WiFiClient client;
 };
-
-#endif

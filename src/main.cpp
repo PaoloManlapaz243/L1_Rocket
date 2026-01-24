@@ -4,6 +4,7 @@
 #include <SD.h>
 #include <WiFi.h>
 #include <passwords.h>
+#include <ClientHandler.h>
 
 #define SPISCK 18 //IO18
 #define SPIMOSI 23 //IO23
@@ -26,6 +27,12 @@ const char FILESUF[] = ".csv";
 File dataFile;
 
 Adafruit_BMP280 bmp(CSBMP280, &SPI);
+
+WiFiServer server(80);
+
+WiFiClient sigmaClient;
+ClientHandler sCHandle(sigmaClient);
+bool hasClient = false;
 
 void setup() 
 {
@@ -95,20 +102,13 @@ void setup()
 
   digitalWrite(ONBOARDLED, LOW);
 
-  int status = WiFi.begin(passwords::WIFINAME, passwords::WIFIPWD);
+  WiFi.softAP(passwords::WIFINAME, passwords::WIFIPWD);
 
-  Serial.println();
-
-  while(status != WL_CONNECTED)
-  {
-    Serial.println("Failed");
-    WiFi.disconnect();
-    delay(10000);
-    status = WiFi.begin(passwords::WIFINAME, passwords::WIFIPWD);
-
-  }
-  IPAddress ip = WiFi.gatewayIP();
-  Serial.println(ip);
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(IP);
+  
+  server.begin();
 
 }
 
@@ -148,8 +148,24 @@ void loop()
     }
 
     digitalWrite(CSSD, HIGH);
-    //SPI.endTransaction();
 
-    delay(250);
+    WiFiClient c = server.available();
+    if (!c) return;
 
+    ClientHandler handler(c);
+    String req = handler.readRequest();
+
+    if (req.startsWith("GET /data")) {
+        handler.sendData(String(t) + " " + String(p) + " " + String(h));
+        return;
+    }
+
+    if (req.startsWith("GET / ")) {
+        handler.sendHTML();
+        return;
+    }
+
+    handler.send404();
+
+    //delay(250);
 }
